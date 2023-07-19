@@ -1,5 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.db.models import Sum, F
 from django.urls import reverse
 
 
@@ -34,3 +35,22 @@ class Product(models.Model):
         db_table = "products"
         verbose_name = "Продукт"
         verbose_name_plural = "Продукты"
+
+
+class Cart(models.Model):
+    qty = models.PositiveIntegerField(verbose_name="Количество", default=1, validators=(MinValueValidator(1),))
+    product = models.ForeignKey("webapp.Product", on_delete=models.CASCADE, verbose_name="Продукт")
+
+    def get_total_price(self):
+        return self.qty * self.product.price
+
+    @classmethod
+    def get_full_total(cls):
+        return cls.objects.aggregate(total=Sum(F("product__price") * F("qty")))['total']
+
+    def __str__(self):
+        return f"{self.product} {self.qty}"
+
+    class Meta:
+        verbose_name = "товар в корзине"
+        verbose_name_plural = "товары в корзине"

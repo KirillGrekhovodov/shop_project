@@ -1,6 +1,6 @@
 from django import forms
 
-from webapp.models import Product
+from webapp.models import Product, Cart
 
 
 class SearchForm(forms.Form):
@@ -11,3 +11,9 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = "__all__"
+
+
+class CartForm(forms.ModelForm):
+    class Meta:
+        model = Cart
+        fields = ["qty"]

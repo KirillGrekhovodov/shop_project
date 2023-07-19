@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Название</th>
+            <th scope="col">Цена</th>
+            <th scope="col">Количество</th>
+            <th scope="col">Сумма</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for cart in cart_list %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ cart.product.title }}</td>
+                <td>{{ cart.product.price }}</td>
+                <td>{{ cart.qty }}</td>
+                <td>{{ cart.get_total_price }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h4>{{ total }}</h4>
+
+{% endblock %}

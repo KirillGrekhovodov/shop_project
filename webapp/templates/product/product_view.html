@@ -15,6 +15,7 @@
         <h6 class="card-subtitle mb-2 text-body-secondary">{{ product.price }} ({{ product.amount }})</h6>
         <p class="card-text">{{ product.description }}</p>
         <p class="card-text">Категория {{ product.category.title }}</p>
+        {% include "partial/cart_add_form.html" %}
     </div>
 
 {% endblock %}
