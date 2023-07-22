@@ -1,10 +1,10 @@
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
-from django.urls import reverse
-from django.views.generic import CreateView, ListView
+from django.urls import reverse, reverse_lazy
+from django.views.generic import CreateView, ListView, DeleteView
 
-from webapp.forms import CartForm
-from webapp.models import Cart, Product
+from webapp.forms import CartForm, OrderForm
+from webapp.models import Cart, Product, Order, OrderProduct
 
 
 class CartAddView(CreateView):
@@ -51,4 +51,71 @@ class CartView(ListView):
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(object_list=None, **kwargs)
         context['total'] = Cart.get_full_total()
+        context['form'] = OrderForm()
         return context
+
+
+class CartDeleteView(DeleteView):
+    model = Cart
+    success_url = reverse_lazy('webapp:cart')
+
+    def get(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
+
+
+class CartDeleteOneView(DeleteView):
+    model = Cart
+    success_url = reverse_lazy('webapp:cart')
+
+    def post(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        success_url = self.get_success_url()
+
+        self.object.qty -= 1
+        if self.object.qty < 1:
+            self.object.delete()
+        else:
+            self.object.save()
+        return HttpResponseRedirect(success_url)
+
+
+class OrderCreate(CreateView):
+    model = Order
+    form_class = OrderForm
+    success_url = reverse_lazy("webapp:index")
+
+    # def form_valid(self, form):
+    #     order = form.save()
+    #     print(order)
+    #
+    #     for item in Cart.objects.all():
+    #         OrderProduct.objects.create(order=order, product=item.product, qty=item.qty)
+    #         item.product.amount -= item.qty
+    #         item.product.save()
+    #         item.delete()
+    #
+    #     return HttpResponseRedirect(self.success_url)
+
+    def form_invalid(self, form):
+        return HttpResponseBadRequest(form.errors['__all__'])
+
+    def form_valid(self, form):
+        order = form.save()
+
+        products = []
+        order_products = []
+
+        for item in Cart.objects.all():
+            order_products.append(OrderProduct(order=order, product=item.product, qty=item.qty))
+            item.product.amount -= item.qty
+            products.append(item.product)
+
+        OrderProduct.objects.bulk_create(order_products)
+        Product.objects.bulk_update(products, ('amount',))
+        Cart.objects.all().delete()
+
+        return HttpResponseRedirect(self.success_url)
+
