@@ -21,13 +21,19 @@ class CartForm(forms.ModelForm):
 
 
 class OrderForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        self.cart = kwargs.pop("cart")
+        super().__init__(*args, **kwargs)
+
     class Meta:
         model = Order
         fields = ["name", "phone", "address"]
 
     def clean(self):
         data = super().clean()
-        for item in Cart.objects.all():
-            if item.qty > item.product.amount:
-                raise ValidationError(f"Товар {item.product.title} закончился")
+        for product_id, qty in self.cart.items():
+            product = Product.objects.get(pk=product_id)
+            if qty > product.amount:
+                raise ValidationError(f"Товар {product.title} закончился")
         return data

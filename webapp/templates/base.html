@@ -29,6 +29,23 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{% url "webapp:cart" %}">Корзина</a>
                 </li>
+
+                {% if request.user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url "accounts:logout" %}">Выход</a>
+                </li>
+                <li class="nav-item">
+                    <p>Здравствуйте <a
+                            href="{% url "accounts:profile" request.user.pk %}">{{ request.user.username }} </a></p>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url "accounts:register" %}?next={{ request.path }}">Регистрация</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url "accounts:login" %}?next={{ request.path }}">Вход</a>
+                </li>
+            {% endif %}
                 {#                {% if request.user.is_authenticated %}#}
                 {#                    <li class="nav-item">#}
                 {#                        <a class="nav-link" href="{% url "accounts:logout" %}">Выход</a>#}

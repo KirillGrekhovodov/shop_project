@@ -13,17 +13,17 @@
         </tr>
         </thead>
         <tbody>
-        {% for cart in cart_list %}
+        {% for item in products %}
             <tr>
                 <th scope="row">{{ forloop.counter }}</th>
-                <td>{{ cart.product.title }}</td>
-                <td>{{ cart.product.price }}</td>
-                <td>{{ cart.qty }}</td>
-                <td>{{ cart.get_total_price }}</td>
-                <td><a href="{% url "webapp:delete_from_cart" cart.pk %}">Удалить полностью</a></td>
+                <td>{{ item.product.title }}</td>
+                <td>{{ item.product.price }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.product_total }}</td>
+                <td><a href="{% url "webapp:delete_from_cart" item.product.pk %}">Удалить полностью</a></td>
 
                 <td>
-                    <form action="{% url "webapp:delete_from_cart_one" cart.pk %}" method="post">
+                    <form action="{% url "webapp:delete_from_cart_one" item.product.pk %}" method="post">
                         {% csrf_token %}
                         <button>Удалить один</button>
                     </form>

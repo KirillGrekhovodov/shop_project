@@ -1,38 +1,43 @@
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, ListView, DeleteView
+from django.views import View
+from django.views.generic import CreateView, ListView, DeleteView, TemplateView
 
 from webapp.forms import CartForm, OrderForm
 from webapp.models import Cart, Product, Order, OrderProduct
 
 
-class CartAddView(CreateView):
-    model = Cart
-    form_class = CartForm
+class CartAddView(View):
+    # model = Cart
+    # form_class = CartForm
 
     def form_invalid(self, form):
         return HttpResponseBadRequest(f"некорректное количество товара")
 
-    def form_valid(self, form):
-        product = get_object_or_404(Product, pk=self.kwargs.get("pk"))
-        qty = form.cleaned_data.get("qty")
+    def post(self, request, *args, **kwargs):
 
-        try:
-            cart = Cart.objects.get(product=product)
-            full_qty = qty + cart.qty
-        except Cart.DoesNotExist:
+        product = get_object_or_404(Product, pk=self.kwargs.get("pk"))
+        qty = int(request.POST.get("qty"))
+
+        cart = self.request.session.get("cart", {})
+        # {"id": "qty"}
+        # {"1": 2, "4": 15}
+        if str(product.pk) in cart:
+            full_qty = qty + cart[str(product.pk)]
+        else:
             full_qty = qty
 
         if full_qty > product.amount:
             return HttpResponseBadRequest(f"Количество товара {product.title} всего {product.amount} штук")
         else:
-            cart_product, is_created = Cart.objects.get_or_create(product=product)
-            if is_created:
-                cart_product.qty = qty
+            if str(product.pk) in cart:
+                cart[str(product.pk)] += qty
             else:
-                cart_product.qty += qty
-            cart_product.save()
+                cart[str(product.pk)] = qty
+
+        self.request.session["cart"] = cart
+        print(self.request.session["cart"])
 
         return HttpResponseRedirect(self.get_success_url())
 
@@ -43,15 +48,30 @@ class CartAddView(CreateView):
         return reverse("webapp:index")
 
 
-class CartView(ListView):
-    model = Cart
-    context_object_name = "cart_list"
+class CartView(TemplateView):
     template_name = "cart/cart_view.html"
 
     def get_context_data(self, *, object_list=None, **kwargs):
+
+        cart = self.request.session.get("cart", {})
+        print(cart)
+
+        total = 0
+        products = []
+        for product_pk, qty in cart.items():
+            product = get_object_or_404(Product, pk=product_pk)
+            product_total = product.price * qty
+            total += product_total
+            products.append({
+                "product": product,
+                "qty": qty,
+                "product_total": product_total
+            })
+
         context = super().get_context_data(object_list=None, **kwargs)
-        context['total'] = Cart.get_full_total()
-        context['form'] = OrderForm()
+        context['total'] = total
+        context['products'] = products
+        context['form'] = OrderForm(cart=cart)
         return context
 
 
@@ -99,23 +119,33 @@ class OrderCreate(CreateView):
     #
     #     return HttpResponseRedirect(self.success_url)
 
+    def get_form_kwargs(self):
+
+        kwargs = super().get_form_kwargs()
+        cart = self.request.session.get("cart", {})
+        kwargs['cart'] = cart
+        return kwargs
+
     def form_invalid(self, form):
         return HttpResponseBadRequest(form.errors['__all__'])
 
     def form_valid(self, form):
+        if self.request.user.is_authenticated:
+            form.instance.user = self.request.user
         order = form.save()
+
 
         products = []
         order_products = []
-
-        for item in Cart.objects.all():
-            order_products.append(OrderProduct(order=order, product=item.product, qty=item.qty))
-            item.product.amount -= item.qty
-            products.append(item.product)
+        cart = self.request.session.get("cart", {})
+        print(cart)
+        for product_id, qty in cart.items():
+            product = get_object_or_404(Product, pk=product_id)
+            order_products.append(OrderProduct(order=order, product=product, qty=qty))
+            product.amount -= qty
+            products.append(product)
 
         OrderProduct.objects.bulk_create(order_products)
         Product.objects.bulk_update(products, ('amount',))
-        Cart.objects.all().delete()
-
+        self.request.session.pop("cart")
         return HttpResponseRedirect(self.success_url)
-
