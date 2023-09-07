@@ -1,4 +1,5 @@
 from django.utils.html import urlencode
+from http import HTTPStatus
 
 from django.urls import reverse_lazy
 
@@ -48,6 +49,15 @@ class ProductListView(ListView):
 class ProductCreateView(CreateView):
     form_class = ProductForm
     template_name = "product/product_create.html"
+
+    # def render_to_response(self, context, **response_kwargs):
+    #     response = super().render_to_response(context, **response_kwargs)
+    #     if context["form"].errors:
+    #         response.status_code = HTTPStatus.BAD_REQUEST
+    #     return response
+
+    def form_invalid(self, form):
+        return super().form_invalid(form)
 
 
 class ProductUpdateView(UpdateView):

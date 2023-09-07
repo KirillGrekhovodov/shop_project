@@ -1,3 +1,4 @@
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.http import HttpResponseBadRequest, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
@@ -8,9 +9,10 @@ from webapp.forms import CartForm, OrderForm
 from webapp.models import Cart, Product, Order, OrderProduct
 
 
-class CartAddView(View):
+class CartAddView(PermissionRequiredMixin, View):
     # model = Cart
     # form_class = CartForm
+    permission_required = "webapp.add_product"
 
     def form_invalid(self, form):
         return HttpResponseBadRequest(f"некорректное количество товара")
@@ -37,8 +39,6 @@ class CartAddView(View):
                 cart[str(product.pk)] = qty
 
         self.request.session["cart"] = cart
-        print(self.request.session["cart"])
-
         return HttpResponseRedirect(self.get_success_url())
 
     def get_success_url(self):
