@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:14.3
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    container_name: test_db
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    container_name: test_backend
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - .:/code
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+
+
+volumes:
+  postgres_data:
