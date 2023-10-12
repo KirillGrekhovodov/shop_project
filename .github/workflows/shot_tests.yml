@@ -23,9 +23,3 @@ jobs:
     - name: Run Tests
       run: |
         docker-compose run -T --rm backend bash -c "coverage run --source='.'  /code/manage.py test && coverage report"
-
-    - name: Debug Info
-      run: |
-        echo "DATABASE_URL: $DATABASE_URL"
-        echo "Trying to connect to the database..."
-        psql -h db -U test -d test -c "SELECT 1;"
