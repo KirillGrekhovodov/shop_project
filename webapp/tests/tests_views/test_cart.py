@@ -47,4 +47,4 @@ class TestCart(TestCase):
 
     def test_test(self):
         with self.assertRaises(ZeroDivisionError):
-            2 / 1
+            2 / 0
