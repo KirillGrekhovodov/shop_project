@@ -11,11 +11,7 @@ jobs:
 
     runs-on: ubuntu-latest
     env:
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: test
-      POSTGRES_USER: test
-      POSTGRES_PORT: 5432
-      DATABASE_URL: "psql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}"
+      DATABASE_URL: "psql://test:test@db:5432/test"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Docker Buildx
