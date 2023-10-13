@@ -1,8 +1,6 @@
 services:
   db:
     image: postgres:14.3-alpine
-    ports:
-      - "9753:5432"
     env_file:
       - .env
     environment:
@@ -12,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     networks:
-      - test
+      - shop_test
 
   backend:
     build: .
@@ -28,11 +26,11 @@ services:
       - .:/code
     command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     networks:
-      - test
+      - shop_test
 
 volumes:
   postgres_data:
 
 networks:
-  test:
-    name: test
+  shop_test:
+    name: shop_test
