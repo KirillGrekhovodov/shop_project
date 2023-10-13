@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:14.3-alpine
+    env_file:
+      - .env
+    environment:
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    container_name: test_db
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - shop_test
+
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    container_name: test_backend
+    env_file:
+      - .env
+    restart: always
+    depends_on:
+      - db
+    volumes:
+      - .:/code
+    command: sh -c "coverage run --source='.'  /code/manage.py test && coverage report"
+    networks:
+      - shop_test
+
+volumes:
+  postgres_data:
+
+networks:
+  shop_test:
+    name: shop_test
