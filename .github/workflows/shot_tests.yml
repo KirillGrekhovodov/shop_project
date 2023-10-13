@@ -22,4 +22,4 @@ jobs:
 
       - name: Run Tests
         run: |
-          docker compose run -T --rm backend bash -c "./code/manage.py test"
+          docker compose run -T --rm backend bash -c "/code/manage.py test"
