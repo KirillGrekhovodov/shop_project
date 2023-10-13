@@ -20,6 +20,8 @@ services:
     env_file:
       - .env
     restart: always
+    healthcheck:
+      timeout: 15s
     depends_on:
       - db
     volumes:
